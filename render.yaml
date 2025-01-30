@@ -1,7 +1,7 @@
 services:
   - type: web
     name: face-expression-recognition
-    env: python==3.9.20
+    env: python
     plan: free
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install numpy==1.21.0 && pip install -r requirements.txt"
     startCommand: "python app.py"
