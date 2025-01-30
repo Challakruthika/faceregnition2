@@ -1,42 +1,40 @@
 import cv2
 from deepface import DeepFace
-import streamlit as st
 
-st.title("Face Expression Recognition")
+def main():
+    # Open a connection to the webcam
+    cap = cv2.VideoCapture(0)
 
-# Open a connection to the webcam
-cap = cv2.VideoCapture(0)
+    while True:
+        # Capture frame-by-frame
+        ret, frame = cap.read()
 
-# Streamlit video display
-frame_window = st.image([])
+        # Detect faces and analyze emotions in the frame
+        try:
+            result = DeepFace.analyze(frame, actions=['emotion'])
+            face_count = len(result)
+            for face in result:
+                (x, y, w, h) = face["region"]["x"], face["region"]["y"], face["region"]["w"], face["region"]["h"]
+                emotion = face["dominant_emotion"]
+                score = face["emotion"][emotion]
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                cv2.putText(frame, f"{emotion}: {score:.2f}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+            
+            # Display the count of people on the screen
+            cv2.putText(frame, f"People count: {face_count}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        except Exception as e:
+            print(f"Error: {e}")
 
-while True:
-    # Capture frame-by-frame
-    ret, frame = cap.read()
+        # Display the resulting frame
+        cv2.imshow('Face Expression Recognition', frame)
 
-    # Detect faces and analyze emotions in the frame
-    try:
-        result = DeepFace.analyze(frame, actions=['emotion'])
-        face_count = len(result)
-        for face in result:
-            (x, y, w, h) = face["region"]["x"], face["region"]["y"], face["region"]["w"], face["region"]["h"]
-            emotion = face["dominant_emotion"]
-            score = face["emotion"][emotion]
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            cv2.putText(frame, f"{emotion}: {score:.2f}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
-        
-        # Display the count of people on the screen
-        cv2.putText(frame, f"People count: {face_count}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    except Exception as e:
-        st.error(f"Error: {e}")
+        # Break the loop on 'q' key press
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    # Display the resulting frame
-    frame_window.image(frame, channels="BGR")
+    # When everything is done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
 
-    # Break the loop on 'q' key press
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# When everything is done, release the capture
-cap.release()
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    main()
