@@ -1,45 +1,42 @@
 import cv2
 from deepface import DeepFace
-import numpy as np
-from flask import Flask, Response, render_template
+import streamlit as st
 
-app = Flask(__name__)
+st.title("Face Expression Recognition")
 
-def generate_frames():
-    cap = cv2.VideoCapture(0)
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+# Open a connection to the webcam
+cap = cv2.VideoCapture(0)
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+# Streamlit video display
+frame_window = st.image([])
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-        people_count = len(faces)
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
 
-        for (x, y, w, h) in faces:
+    # Detect faces and analyze emotions in the frame
+    try:
+        result = DeepFace.analyze(frame, actions=['emotion'])
+        face_count = len(result)
+        for face in result:
+            (x, y, w, h) = face["region"]["x"], face["region"]["y"], face["region"]["w"], face["region"]["h"]
+            emotion = face["dominant_emotion"]
+            score = face["emotion"][emotion]
             cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            face_region = frame[y:y+h, x:x+w]
-            result = DeepFace.analyze(face_region, actions=['emotion'], enforce_detection=False)
-            dominant_emotion = result[0]['dominant_emotion']
-            cv2.putText(frame, dominant_emotion, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+            cv2.putText(frame, f"{emotion}: {score:.2f}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+        
+        # Display the count of people on the screen
+        cv2.putText(frame, f"People count: {face_count}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    except Exception as e:
+        st.error(f"Error: {e}")
 
-        cv2.putText(frame, f'People count: {people_count}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+    # Display the resulting frame
+    frame_window.image(frame, channels="BGR")
 
-    cap.release()
+    # Break the loop on 'q' key press
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+# When everything is done, release the capture
+cap.release()
+cv2.destroyAllWindows()
