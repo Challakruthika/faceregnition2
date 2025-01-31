@@ -7,7 +7,7 @@ import tensorflow as tf
 import os
 
 # Load pre-trained emotion recognition model
-model_path = 'path_to_emotion_model.h5'  # Update this path
+model_path = 'models/path_to_emotion_model.h5'  # Update this path
 if os.path.exists(model_path):
     emotion_model = tf.keras.models.load_model(model_path)
     emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
@@ -63,4 +63,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-   
