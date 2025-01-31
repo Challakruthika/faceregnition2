@@ -4,11 +4,16 @@ from PIL import Image
 import mediapipe as mp
 import numpy as np
 import tensorflow as tf
+import os
 
 # Load pre-trained emotion recognition model
 model_path = 'path_to_emotion_model.h5'  # Update this path
-emotion_model = tf.keras.models.load_model(model_path)
-emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+if os.path.exists(model_path):
+    emotion_model = tf.keras.models.load_model(model_path)
+    emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+else:
+    st.error(f"Model file not found: {model_path}. Please upload the model file to the correct path.")
+    st.stop()
 
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
