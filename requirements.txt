@@ -2,5 +2,5 @@ streamlit
 Pillow
 numpy
 tensorflow
-face_recognition
+mediapipe
 
