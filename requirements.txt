@@ -1,7 +1,2 @@
-streamlit
-Pillow
-numpy
-tensorflow
-mediapipe
-
-
+opencv-python
+deepface
